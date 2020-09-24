@@ -23,7 +23,6 @@ extern "C" {
 typedef struct VoskModel VoskModel;
 typedef struct VoskSpkModel VoskSpkModel;
 typedef struct VoskRecognizer VoskRecognizer;
-typedef struct VoskGpu VoskGpu;
 
 VoskModel *vosk_model_new(const char *model_path);
 void vosk_model_free(VoskModel *model);
@@ -49,9 +48,6 @@ void vosk_recognizer_free(VoskRecognizer *recognizer);
  *   greather than 0 - more verbose mode
  */
 void vosk_set_log_level(int log_level);
-
-void vosk_gpu_init();
-void vosk_gpu_instantiate();
 
 #ifdef __cplusplus
 }

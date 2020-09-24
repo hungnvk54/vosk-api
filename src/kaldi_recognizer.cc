@@ -13,9 +13,11 @@
 // limitations under the License.
 
 #include "kaldi_recognizer.h"
-#include "json.h"
 #include "fstext/fstext-utils.h"
 #include "lat/sausages.h"
+
+#include "json.h"
+
 
 using namespace fst;
 using namespace kaldi::nnet3;

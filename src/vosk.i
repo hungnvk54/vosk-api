@@ -134,9 +134,3 @@ typedef struct {} KaldiRecognizer;
 
 %rename(SetLogLevel) vosk_set_log_level;
 void vosk_set_log_level(int level);
-
-%rename(GpuInit) vosk_gpu_init;
-void vosk_gpu_init();
-
-%rename(GpuInstantiate) vosk_gpu_instantiate;
-void vosk_gpu_instantiate();

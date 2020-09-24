@@ -1,2 +1,2 @@
-from .vosk import KaldiRecognizer, Model, SpkModel, SetLogLevel, GpuInit, GpuInstantiate
+from .vosk import KaldiRecognizer, Model, SpkModel, SetLogLevel
 

@@ -13,7 +13,6 @@ class build_py(_build_py):
 
 kaldi_root = os.getenv('KALDI_ROOT')
 kaldi_mkl = os.getenv('KALDI_MKL')
-kaldi_cuda = os.getenv('KALDI_CUDA')
 source_path = os.getenv("VOSK_SOURCE", os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(__file__)), "../src")))
 
 if kaldi_root == None:
@@ -53,27 +52,18 @@ kaldi_libraries = []
 
 if sys.platform.startswith('darwin'):
     kaldi_link_args.extend(['-Wl,-undefined,dynamic_lookup', '-framework', 'Accelerate'])
-elif kaldi_mkl == "1":
+elif kaldi_mkl != None:
     kaldi_link_args.extend(['-L/opt/intel/mkl/lib/intel64', '-Wl,-rpath=/opt/intel/mkl/lib/intel64'])
     kaldi_libraries.extend(['mkl_rt', 'mkl_intel_lp64', 'mkl_core', 'mkl_sequential'])
 else:
     kaldi_static_libs.append('tools/OpenBLAS/libopenblas.a')
     kaldi_libraries.append('gfortran')
 
-define_macros = [('FST_NO_DYNAMIC_LINKING', '1')]
-include_dirs = [kaldi_root + '/src', kaldi_root + '/tools/openfst/include', 'vosk']
-
-if kaldi_cuda != None:
-    include_dirs.append('/usr/local/cuda/include')
-    define_macros.append(('HAVE_CUDA', '1'))
-    kaldi_link_args.append('-L/usr/local/cuda/lib64')
-    kaldi_libraries.extend(['cublas', 'cusparse', 'cudart', 'curand', 'cufft', 'nvToolsExt', 'cusolver'])
-
 sources = ['kaldi_recognizer.cc', 'model.cc', 'spk_model.cc', 'vosk_api.cc', 'vosk.i']
 
 vosk_ext = Extension('vosk._vosk',
-                    define_macros = define_macros,
-                    include_dirs = include_dirs,
+                    define_macros = [('FST_NO_DYNAMIC_LINKING', '1')],
+                    include_dirs = [kaldi_root + '/src', kaldi_root + '/tools/openfst/include', 'vosk'],
                     swig_opts=['-outdir', 'vosk', '-c++'],
                     libraries = kaldi_libraries,
                     extra_objects = [kaldi_root + '/' + x for x in kaldi_static_libs],
@@ -82,11 +72,11 @@ vosk_ext = Extension('vosk._vosk',
                     extra_compile_args = ['-std=c++11', '-Wno-sign-compare', '-Wno-unused-variable', '-Wno-unused-local-typedefs'])
 
 setuptools.setup(
-    name="vosk",
-    version="0.3.13",
+    name="vosk", # Replace with your own username
+    version="0.3.8",
     author="Alpha Cephei Inc",
     author_email="contact@alphacephei.com",
-    description="Offline open source speech recognition API based on Kaldi and Vosk",
+    description="API for Kaldi and Vosk",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/alphacep/vosk-api",
