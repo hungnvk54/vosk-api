@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef VOSK_KALDI_RECOGNIZER_H
-#define VOSK_KALDI_RECOGNIZER_H
-
 #include "base/kaldi-common.h"
 #include "util/common-utils.h"
 #include "fstext/fstext-lib.h"
@@ -32,18 +29,37 @@
 
 using namespace kaldi;
 
-enum KaldiRecognizerState {
-    RECOGNIZER_INITIALIZED,
-    RECOGNIZER_RUNNING,
-    RECOGNIZER_ENDPOINT,
-    RECOGNIZER_FINALIZED
+
+class ResultData {
+    
+    public:
+        ResultData (const ResultData &from){
+            word_ = from.word_;
+            start_ = from.start_;
+            end_ = from.end_;
+            conf_ = from.conf_;
+        }
+    
+    public:
+        ResultData(std::string word, float start, float end, float conf){
+            word_ = word;
+            start_ = start;
+            end_ = end;
+            conf_ = conf;
+        }
+    
+    public:
+        std::string word_;
+        float start_;
+        float end_;
+        float conf_;
 };
 
 class KaldiRecognizer {
     public:
-        KaldiRecognizer(Model *model, float sample_frequency);
-        KaldiRecognizer(Model *model, SpkModel *spk_model, float sample_frequency);
-        KaldiRecognizer(Model *model, float sample_frequency, char const *grammar);
+        KaldiRecognizer(Model *model, float sample_frequency, float time_offset = 0);
+        KaldiRecognizer(Model *model, SpkModel *spk_model, float sample_frequency, float time_offset = 0);
+        KaldiRecognizer(Model *model, float sample_frequency, char const *grammar, float time_offset = 0);
         ~KaldiRecognizer();
         bool AcceptWaveform(const char *data, int len);
         bool AcceptWaveform(const short *sdata, int len);
@@ -53,14 +69,14 @@ class KaldiRecognizer {
         const char* PartialResult();
 
     private:
-        void InitState();
+        void BufferResult();
+        void DecodeBeforeResetMemory();
+    private:
         void InitRescoring();
         void CleanUp();
         void UpdateSilenceWeights();
         bool AcceptWaveform(Vector<BaseFloat> &wdata);
-        bool GetSpkVector(Vector<BaseFloat> &out_xvector, int *frames);
-        const char *GetResult();
-        const char *StoreReturn(const string &res);
+        void GetSpkVector(Vector<BaseFloat> &xvector);
 
         Model *model_;
         SingleUtteranceNnet3Decoder *decoder_;
@@ -76,12 +92,10 @@ class KaldiRecognizer {
 
         float sample_frequency_;
         int32 frame_offset_;
-
-        int64 samples_processed_;
-        int64 samples_round_start_;
-
-        KaldiRecognizerState state_;
+        int32 round_offset_;
+        bool input_finalized_;
         string last_result_;
+        float time_offset_;
+        stringstream text_;
+        std::vector<ResultData> buffer_data;
 };
-
-#endif /* VOSK_KALDI_RECOGNIZER_H */

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef VOSK_MODEL_H
-#define VOSK_MODEL_H
+#ifndef MODEL_H_
+#define MODEL_H_
 
 #include "base/kaldi-common.h"
 #include "fstext/fstext-lib.h"
@@ -67,7 +67,8 @@ protected:
     kaldi::OnlineEndpointConfig endpoint_config_;
     kaldi::LatticeFasterDecoderConfig nnet3_decoding_config_;
     kaldi::nnet3::NnetSimpleLoopedComputationOptions decodable_opts_;
-    kaldi::OnlineNnet2FeaturePipelineInfo feature_info_;
+    kaldi::OnlineNnet2FeaturePipelineConfig feature_opts_;
+    kaldi::OnlineNnet2FeaturePipelineInfo *feature_info_;
 
     kaldi::nnet3::DecodableNnetSimpleLoopedInfo *decodable_info_;
     kaldi::TransitionModel *trans_model_;
@@ -86,4 +87,4 @@ protected:
     int ref_cnt_;
 };
 
-#endif /* VOSK_MODEL_H */
+#endif /* MODEL_H_ */

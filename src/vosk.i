@@ -34,11 +34,6 @@ import java.nio.ByteOrder;
     return AcceptWaveform(bdata, bdata.length);
   }
 %}
-%pragma(java) jniclasscode=%{
-    static {
-        System.loadLibrary("vosk_jni");
-    }
-%}
 #endif
 
 #if SWIGCSHARP
@@ -87,14 +82,14 @@ typedef struct {} KaldiRecognizer;
 }
 
 %extend KaldiRecognizer {
-    KaldiRecognizer(Model *model, float sample_rate)  {
-        return vosk_recognizer_new(model, sample_rate);
+    KaldiRecognizer(Model *model, float sample_rate, float time_offset)  {
+        return vosk_recognizer_new(model, sample_rate, time_offset);
     }
     KaldiRecognizer(Model *model, SpkModel *spk_model, float sample_rate)  {
         return vosk_recognizer_new_spk(model, spk_model, sample_rate);
     }
-    KaldiRecognizer(Model *model, float sample_rate, const char* grammar)  {
-        return vosk_recognizer_new_grm(model, sample_rate, grammar);
+    KaldiRecognizer(Model *model, float sample_rate, const char* grammar, float time_offset)  {
+        return vosk_recognizer_new_grm(model, sample_rate, grammar, time_offset);
     }
     ~KaldiRecognizer() {
         vosk_recognizer_free($self);
@@ -139,3 +134,9 @@ typedef struct {} KaldiRecognizer;
 
 %rename(SetLogLevel) vosk_set_log_level;
 void vosk_set_log_level(int level);
+
+%rename(GpuInit) vosk_gpu_init;
+void vosk_gpu_init();
+
+%rename(GpuInstantiate) vosk_gpu_instantiate;
+void vosk_gpu_instantiate();

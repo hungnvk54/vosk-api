@@ -125,25 +125,28 @@ Model::Model(const char *model_path) : model_path_str_(model_path) {
 void Model::ConfigureV1()
 {
     const char *extra_args[] = {
+        "--min-active=200",
         "--max-active=7000",
         "--beam=13.0",
         "--lattice-beam=6.0",
         "--acoustic-scale=1.0",
-
+	"--extra-left-context-initial=0",
+        "--config=/opt/kaldi-vi/ivector/online.conf",
         "--frame-subsampling-factor=3",
-
         "--endpoint.silence-phones=1:2:3:4:5:6:7:8:9:10",
         "--endpoint.rule2.min-trailing-silence=0.5",
-        "--endpoint.rule3.min-trailing-silence=1.0",
-        "--endpoint.rule4.min-trailing-silence=2.0",
+        "--endpoint.rule3.min-trailing-silence=1",
+        "--endpoint.rule4.min-trailing-silence=0.2",
 
         "--print-args=false",
     };
 
     kaldi::ParseOptions po("");
+
     nnet3_decoding_config_.Register(&po);
     endpoint_config_.Register(&po);
     decodable_opts_.Register(&po);
+    feature_opts_.Register(&po);
 
     vector<const char*> args;
     args.push_back("vosk");
@@ -171,6 +174,10 @@ void Model::ConfigureV2()
     decodable_opts_.Register(&po);
     po.ReadConfigFile(model_path_str_ + "/conf/model.conf");
 
+    KALDI_LOG << "Decoding params beam=" << nnet3_decoding_config_.beam <<
+         " max-active=" << nnet3_decoding_config_.max_active <<
+         " lattice-beam=" << nnet3_decoding_config_.lattice_beam;
+    KALDI_LOG << "Silence phones " << endpoint_config_.silence_phones;
 
     nnet3_rxfilename_ = model_path_str_ + "/am/final.mdl";
     hclg_fst_rxfilename_ = model_path_str_ + "/graph/HCLG.fst";
@@ -189,17 +196,17 @@ void Model::ReadDataFiles()
 {
     struct stat buffer;
 
-    KALDI_LOG << "Decoding params beam=" << nnet3_decoding_config_.beam <<
-         " max-active=" << nnet3_decoding_config_.max_active <<
-         " lattice-beam=" << nnet3_decoding_config_.lattice_beam;
-    KALDI_LOG << "Silence phones " << endpoint_config_.silence_phones;
-
-    feature_info_.feature_type = "mfcc";
+    /*feature_info_.feature_type = "mfcc";
     ReadConfigFromFile(mfcc_conf_rxfilename_, &feature_info_.mfcc_opts);
     feature_info_.mfcc_opts.frame_opts.allow_downsample = true; // It is safe to downsample
-
-    feature_info_.silence_weighting_config.silence_weight = 1e-3;
-    feature_info_.silence_weighting_config.silence_phones_str = endpoint_config_.silence_phones;
+    feature_info_.add_pitch = true;
+    ReadConfigsFromFile(model_path_str_ + "/online_pitch.conf",
+                        &feature_info_.pitch_opts,
+                        &feature_info_.pitch_process_opts); */
+    KALDI_LOG <<"Reading log from file";
+    feature_info_ = new kaldi::OnlineNnet2FeaturePipelineInfo(feature_opts_);
+    //feature_info_.silence_weighting_config.silence_weight = 1e-3;
+    //feature_info_.silence_weighting_config.silence_phones_str = endpoint_config_.silence_phones;
 
     trans_model_ = new kaldi::TransitionModel();
     nnet_ = new kaldi::nnet3::AmNnetSimple();
@@ -218,7 +225,7 @@ void Model::ReadDataFiles()
     if (stat(final_ie_rxfilename_.c_str(), &buffer) == 0) {
         KALDI_LOG << "Loading i-vector extractor from " << final_ie_rxfilename_;
 
-        OnlineIvectorExtractionConfig ivector_extraction_opts;
+        /*OnlineIvectorExtractionConfig ivector_extraction_opts;
         ivector_extraction_opts.splice_config_rxfilename = model_path_str_ + "/ivector/splice.conf";
         ivector_extraction_opts.cmvn_config_rxfilename = model_path_str_ + "/ivector/online_cmvn.conf";
         ivector_extraction_opts.lda_mat_rxfilename = model_path_str_ + "/ivector/final.mat";
@@ -226,9 +233,7 @@ void Model::ReadDataFiles()
         ivector_extraction_opts.diag_ubm_rxfilename = model_path_str_ + "/ivector/final.dubm";
         ivector_extraction_opts.ivector_extractor_rxfilename = model_path_str_ + "/ivector/final.ie";
         feature_info_.use_ivectors = true;
-        feature_info_.ivector_extractor_info.Init(ivector_extraction_opts);
-    } else {
-        feature_info_.use_ivectors = false;
+        feature_info_.ivector_extractor_info.Init(ivector_extraction_opts);*/
     }
 
     if (stat(hclg_fst_rxfilename_.c_str(), &buffer) == 0) {
@@ -301,4 +306,5 @@ Model::~Model() {
     delete hclg_fst_;
     delete hcl_fst_;
     delete g_fst_;
+    delete feature_info_;
 }

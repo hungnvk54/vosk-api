@@ -41,9 +41,9 @@ void vosk_spk_model_free(VoskSpkModel *model)
     ((SpkModel *)model)->Unref();
 }
 
-VoskRecognizer *vosk_recognizer_new(VoskModel *model, float sample_rate)
+VoskRecognizer *vosk_recognizer_new(VoskModel *model, float sample_rate, float time_offset = 0)
 {
-    return (VoskRecognizer *)new KaldiRecognizer((Model *)model, sample_rate);
+    return (VoskRecognizer *)new KaldiRecognizer((Model *)model, sample_rate, time_offset);
 }
 
 VoskRecognizer *vosk_recognizer_new_spk(VoskModel *model, VoskSpkModel *spk_model, float sample_rate)
@@ -51,9 +51,9 @@ VoskRecognizer *vosk_recognizer_new_spk(VoskModel *model, VoskSpkModel *spk_mode
     return (VoskRecognizer *)new KaldiRecognizer((Model *)model, (SpkModel *)spk_model, sample_rate);
 }
 
-VoskRecognizer *vosk_recognizer_new_grm(VoskModel *model, float sample_rate, const char *grammar)
+VoskRecognizer *vosk_recognizer_new_grm(VoskModel *model, float sample_rate, const char *grammar, float time_offset)
 {
-    return (VoskRecognizer *)new KaldiRecognizer((Model *)model, sample_rate, grammar);
+    return (VoskRecognizer *)new KaldiRecognizer((Model *)model, sample_rate, grammar, time_offset);
 }
 
 int vosk_recognizer_accept_waveform(VoskRecognizer *recognizer, const char *data, int length)
@@ -94,4 +94,17 @@ void vosk_recognizer_free(VoskRecognizer *recognizer)
 void vosk_set_log_level(int log_level)
 {
     SetVerboseLevel(log_level);
+}
+
+#include "cudamatrix/cu-device.h"
+
+void vosk_gpu_init()
+{
+    kaldi::CuDevice::Instantiate().SelectGpuId("yes");
+    kaldi::CuDevice::Instantiate().AllowMultithreading();
+}
+
+void vosk_gpu_instantiate()
+{
+    kaldi::CuDevice::Instantiate();
 }
