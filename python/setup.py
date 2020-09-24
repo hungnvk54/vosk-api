@@ -13,6 +13,7 @@ class build_py(_build_py):
 
 kaldi_root = os.getenv('KALDI_ROOT')
 kaldi_mkl = os.getenv('KALDI_MKL')
+kaldi_cuda = os.getenv('KALDI_CUDA')
 source_path = os.getenv("VOSK_SOURCE", os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(__file__)), "../src")))
 
 if kaldi_root == None:
@@ -59,11 +60,20 @@ else:
     kaldi_static_libs.append('tools/OpenBLAS/libopenblas.a')
     kaldi_libraries.append('gfortran')
 
+define_macros = [('FST_NO_DYNAMIC_LINKING', '1')]
+include_dirs = [kaldi_root + '/src', kaldi_root + '/tools/openfst/include', 'vosk']
+
+if kaldi_cuda != None:
+    include_dirs.append('/usr/local/cuda/include')
+    define_macros.append(('HAVE_CUDA', '1'))
+    kaldi_link_args.append('-L/usr/local/cuda/lib64')
+    kaldi_libraries.extend(['cublas', 'cusparse', 'cudart', 'curand', 'cufft', 'nvToolsExt', 'cusolver'])
+
 sources = ['kaldi_recognizer.cc', 'model.cc', 'spk_model.cc', 'vosk_api.cc', 'vosk.i']
 
 vosk_ext = Extension('vosk._vosk',
-                    define_macros = [('FST_NO_DYNAMIC_LINKING', '1')],
-                    include_dirs = [kaldi_root + '/src', kaldi_root + '/tools/openfst/include', 'vosk'],
+                    define_macros = define_macros,
+                    include_dirs = include_dirs,
                     swig_opts=['-outdir', 'vosk', '-c++'],
                     libraries = kaldi_libraries,
                     extra_objects = [kaldi_root + '/' + x for x in kaldi_static_libs],
