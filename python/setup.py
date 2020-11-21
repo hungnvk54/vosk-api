@@ -63,7 +63,7 @@ else:
 define_macros = [('FST_NO_DYNAMIC_LINKING', '1')]
 include_dirs = [kaldi_root + '/src', kaldi_root + '/tools/openfst/include', 'vosk']
 
-if kaldi_cuda != None:
+if kaldi_cuda =="yes":
     include_dirs.append('/usr/local/cuda/include')
     define_macros.append(('HAVE_CUDA', '1'))
     kaldi_link_args.append('-L/usr/local/cuda/lib64')
